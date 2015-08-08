@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		50802D160928AA740A89B0DB /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 57DF6E925584B0CF5DEB1113 /* libPods.a */; };
 		63E1E9821B28CB2100EF0978 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 63E1E9811B28CB2100EF0978 /* main.m */; };
 		63E1E9851B28CB2100EF0978 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 63E1E9841B28CB2100EF0978 /* AppDelegate.m */; };
 		63E1E9881B28CB2100EF0978 /* SelectUserViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 63E1E9871B28CB2100EF0978 /* SelectUserViewController.m */; };
@@ -18,6 +19,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		57DF6E925584B0CF5DEB1113 /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		63E1E97C1B28CB2100EF0978 /* AuthSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AuthSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		63E1E9801B28CB2100EF0978 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		63E1E9811B28CB2100EF0978 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -41,6 +43,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				832213142AB24DB816D02635 /* libPods-AuthSample.a in Frameworks */,
+				50802D160928AA740A89B0DB /* libPods.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -60,6 +63,7 @@
 			isa = PBXGroup;
 			children = (
 				F217A6ECA7F5BD1D5FB5071B /* libPods-AuthSample.a */,
+				57DF6E925584B0CF5DEB1113 /* libPods.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
