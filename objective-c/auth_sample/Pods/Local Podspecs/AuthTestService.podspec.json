@@ -1,0 +1,43 @@
+{
+  "name": "AuthTestService",
+  "version": "0.0.1",
+  "license": "New BSD",
+  "platforms": {
+    "ios": "6.0",
+    "osx": "10.8"
+  },
+  "prepare_command": "mkdir -p Pods/AuthTestService\nprotoc -I ../../protos --objc_out=Pods/AuthTestService --objcgrpc_out=Pods/AuthTestService ../../protos/auth_sample.proto",
+  "subspecs": [
+    {
+      "name": "Messages",
+      "source_files": [
+        "Pods/AuthTestService/*.pbobjc.{h,m}",
+        "Pods/AuthTestService/**/*.pbobjc.{h,m}"
+      ],
+      "header_mappings_dir": "Pods/AuthTestService",
+      "requires_arc": false,
+      "dependencies": {
+        "Protobuf": [
+          "~> 3.0.0-alpha-3"
+        ]
+      }
+    },
+    {
+      "name": "Services",
+      "source_files": [
+        "Pods/AuthTestService/*.pbrpc.{h,m}",
+        "Pods/AuthTestService/**/*.pbrpc.{h,m}"
+      ],
+      "header_mappings_dir": "Pods/AuthTestService",
+      "requires_arc": true,
+      "dependencies": {
+        "gRPC": [
+          "~> 0.6"
+        ],
+        "AuthTestService/Messages": [
+
+        ]
+      }
+    }
+  ]
+}

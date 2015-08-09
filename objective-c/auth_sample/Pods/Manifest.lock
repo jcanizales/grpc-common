@@ -1,0 +1,74 @@
+PODS:
+  - AuthTestService (0.0.1):
+    - AuthTestService/Messages (= 0.0.1)
+    - AuthTestService/Services (= 0.0.1)
+  - AuthTestService/Messages (0.0.1):
+    - Protobuf (~> 3.0.0-alpha-3)
+  - AuthTestService/Services (0.0.1):
+    - AuthTestService/Messages
+    - gRPC (~> 0.6)
+  - Google/Core (1.0.7):
+    - GoogleNetworkingUtilities (~> 1.0)
+    - GoogleSymbolUtilities (~> 1.0)
+    - GoogleUtilities (~> 1.0)
+  - Google/SignIn (1.0.7):
+    - Google/Core
+    - GoogleSignIn (~> 2.0)
+  - GoogleAppUtilities (1.0.0):
+    - GoogleSymbolUtilities (~> 1.0)
+  - GoogleAuthUtilities (1.0.1):
+    - GoogleNetworkingUtilities (~> 1.0)
+    - GoogleSymbolUtilities (~> 1.0)
+  - GoogleNetworkingUtilities (1.0.0):
+    - GoogleSymbolUtilities (~> 1.0)
+  - GoogleSignIn (2.2.0):
+    - GoogleAppUtilities (~> 1)
+    - GoogleAuthUtilities (~> 1)
+    - GoogleNetworkingUtilities (~> 1)
+    - GoogleUtilities (~> 1)
+  - GoogleSymbolUtilities (1.0.0)
+  - GoogleUtilities (1.0.1):
+    - GoogleSymbolUtilities (~> 1.0)
+  - gRPC (0.7.0):
+    - gRPC/C-Core (= 0.7.0)
+    - gRPC/GRPCClient (= 0.7.0)
+    - gRPC/ProtoRPC (= 0.7.0)
+    - gRPC/RxLibrary (= 0.7.0)
+  - gRPC/C-Core (0.7.0):
+    - OpenSSL (~> 1.0.200)
+  - gRPC/GRPCClient (0.7.0):
+    - gRPC/C-Core
+    - gRPC/RxLibrary
+  - gRPC/ProtoRPC (0.7.0):
+    - gRPC/GRPCClient
+    - gRPC/RxLibrary
+    - Protobuf (~> 3.0.0-alpha-3)
+  - gRPC/RxLibrary (0.7.0)
+  - OpenSSL (1.0.204)
+  - Protobuf (3.0.0-alpha-3)
+
+DEPENDENCIES:
+  - AuthTestService (from `.`)
+  - Google/SignIn
+  - gRPC (from `../../../grpc`)
+
+EXTERNAL SOURCES:
+  AuthTestService:
+    :path: .
+  gRPC:
+    :path: ../../../grpc
+
+SPEC CHECKSUMS:
+  AuthTestService: 9024610f4818630af756f2117ec994aa19829cdf
+  Google: 875f5a8ade86dd02e36586e4a54814843938c7f6
+  GoogleAppUtilities: c01c6a5671e9da8b9d690fdaec5959d6c2aac699
+  GoogleAuthUtilities: 049ffd3a297cdffd271451b82fd4e75304f15ef3
+  GoogleNetworkingUtilities: 292992ab31b7b4ba32809a0e8b40e324cdfb2c0c
+  GoogleSignIn: c45d8d1a873784a3283b4f47f331dc06d8a727b6
+  GoogleSymbolUtilities: a7b0feed1fe667c8d5e647177938d0ecd62d6948
+  GoogleUtilities: e3475cd4d45134221d2f3f3626095a1c49b62041
+  gRPC: 91d09c3c69acb32476aa70ee402b5f86ecaf26ae
+  OpenSSL: 576b352e6e6e60793ca133c6785736e3cbc31a09
+  Protobuf: c823c03c19e1c6f3ff6688551e31f3fa76fd46cb
+
+COCOAPODS: 0.38.2

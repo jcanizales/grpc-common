@@ -1,0 +1,1 @@
+../../../AuthTestService/AuthSample.pbobjc.h
