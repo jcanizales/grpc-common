@@ -86,17 +86,16 @@ static NSString * const kTestHostAddress = @"grpc-test.sandbox.google.com";
 
   // Create a not-yet-started RPC. We want to set the request headers on this object before starting
   // it.
-  ProtoRPC *call =
-      [client RPCToUnaryCallWithRequest:request handler:^(AUTHResponse *response, NSError *error) {
-        if (response) {
-          // This test server responds with the email and scope of the access token it receives.
-          self.mainLabel.text = [NSString stringWithFormat:@"Used scope: %@ on behalf of user %@",
-                                 response.oauthScope, response.username];
-
-        } else {
-          self.mainLabel.text = error.UIDescription;
-        }
-      }];
+  ProtoRPC *call = [client RPCToUnaryCallWithRequest:request
+                                             handler:^(AUTHResponse *response, NSError *error) {
+    if (response) {
+      // This test server responds with the email and scope of the access token it receives.
+      self.mainLabel.text = [NSString stringWithFormat:@"Used scope: %@ on behalf of user %@",
+                                                       response.oauthScope, response.username];
+    } else {
+      self.mainLabel.text = error.UIDescription;
+    }
+  }];
 
   // Set the access token to be used.
   call.oauth2AccessToken = GIDSignIn.sharedInstance.currentUser.authentication.accessToken;
