@@ -109,9 +109,22 @@ static char kCredentialsKey;
 @end
 
 
-
+@interface MakeRPCViewController () <GRXWriterInterceptor>
+@end
 
 @implementation MakeRPCViewController
+
+- (void)interceptStartOfWriter:(ProtoRPC *)call
+         withCompletionHandler:(void (^)(NSError *error))completionHandler {
+  GIDGoogleUser *currentUser = GIDSignIn.sharedInstance.currentUser;
+  [currentUser.authentication getAccessTokenWithHandler:^(NSString *accessToken, NSError *error) {
+    if (!error) {
+      // Set the access token to be used.
+      call.oauth2AccessToken = accessToken;
+    }
+    completionHandler(error);
+  }];
+}
 
 - (void)viewWillAppear:(BOOL)animated {
 
@@ -137,16 +150,8 @@ static char kCredentialsKey;
   }];
 
   // We want this to happen automatically on [call start].
-  GIDGoogleUser *currentUser = GIDSignIn.sharedInstance.currentUser;
-  [currentUser.authentication getAccessTokenWithHandler:^(NSString *accessToken, NSError *error) {
-    if (!error) {
-      // Set the access token to be used.
-      call.oauth2AccessToken = accessToken;
-
-      // Start the RPC.
-      [call start];
-    }
-  }];
+  call.beforeStarting = self;
+  [call start];
 
   self.mainLabel.text = @"Waiting for RPC to complete...";
 }
