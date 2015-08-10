@@ -37,6 +37,7 @@
 #import <Google/SignIn.h>
 #include <grpc/status.h>
 #import <GRPCClient/GRPCCall+OAuth2.h>
+#import <objc/runtime.h>
 #import <ProtoRPC/ProtoRPC.h>
 
 NSString * const kTestScope = @"https://www.googleapis.com/auth/xapi.zoo";
@@ -73,12 +74,50 @@ static NSString * const kTestHostAddress = @"grpc-test.sandbox.google.com";
 }
 @end
 
+
+
+
+
+@interface GRPCOAuth2Credentials : NSObject
+@end
+@implementation GRPCOAuth2Credentials
+@end
+
+static char kCredentialsKey;
+
+@interface ProtoService (OAuth2)
+@property(nonatomic, strong) GRPCOAuth2Credentials *credentials;
+@end
+
+@implementation ProtoService (OAuth2)
+- (GRPCOAuth2Credentials *)credentials {
+  return objc_getAssociatedObject(self, &kCredentialsKey);
+}
+- (void)setCredentials:(GRPCOAuth2Credentials *)credentials {
+  objc_setAssociatedObject(self, &kCredentialsKey, credentials, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+@end
+
+@interface GIDSignIn (GRPCOAuth2)
++ (GRPCOAuth2Credentials *)grpc_credentials;
+@end
+
+@implementation GIDSignIn (GRPCOAuth2)
++ (GRPCOAuth2Credentials *)grpc_credentials {
+  return [[GRPCOAuth2Credentials alloc] init];
+}
+@end
+
+
+
+
 @implementation MakeRPCViewController
 
 - (void)viewWillAppear:(BOOL)animated {
 
   // Create a service client and a proto request as usual.
   AUTHTestService *client = [[AUTHTestService alloc] initWithHost:kTestHostAddress];
+  client.credentials = GIDSignIn.grpc_credentials;
 
   AUTHRequest *request = [AUTHRequest message];
   request.fillUsername = YES;
