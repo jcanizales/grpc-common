@@ -136,11 +136,17 @@ static char kCredentialsKey;
     }
   }];
 
-  // Set the access token to be used.
-  call.oauth2AccessToken = GIDSignIn.sharedInstance.currentUser.authentication.accessToken;
+  // We want this to happen automatically on [call start].
+  GIDGoogleUser *currentUser = GIDSignIn.sharedInstance.currentUser;
+  [currentUser.authentication getAccessTokenWithHandler:^(NSString *accessToken, NSError *error) {
+    if (!error) {
+      // Set the access token to be used.
+      call.oauth2AccessToken = accessToken;
 
-  // Start the RPC.
-  [call start];
+      // Start the RPC.
+      [call start];
+    }
+  }];
 
   self.mainLabel.text = @"Waiting for RPC to complete...";
 }
