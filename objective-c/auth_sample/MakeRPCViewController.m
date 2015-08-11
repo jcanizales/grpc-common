@@ -36,6 +36,7 @@
 #import <AuthTestService/AuthSample.pbrpc.h>
 #import <Google/SignIn.h>
 #include <grpc/status.h>
+#import <GRPCClient/GRPCCall.h>
 #import <GRPCClient/GRPCCall+OAuth2.h>
 #import <objc/runtime.h>
 #import <ProtoRPC/ProtoRPC.h>
@@ -77,60 +78,83 @@ static NSString * const kTestHostAddress = @"grpc-test.sandbox.google.com";
 
 
 
-
-@interface GRPCOAuth2Credentials : NSObject
-@end
-@implementation GRPCOAuth2Credentials
+@protocol GRPCOAuth2Credentials <NSObject>
+- (void)getAccessTokenWithHandler:(void (^)(NSString *accessToken, NSError *error))handler;
 @end
 
-static char kCredentialsKey;
-
-@interface ProtoService (OAuth2)
-@property(nonatomic, strong) GRPCOAuth2Credentials *credentials;
+@interface GIDAuthentication (GRPCOAuth2) <GRPCOAuth2Credentials>
 @end
 
-@implementation ProtoService (OAuth2)
-- (GRPCOAuth2Credentials *)credentials {
-  return objc_getAssociatedObject(self, &kCredentialsKey);
+
+
+#import <RxLibrary/GRXWriter.h>
+#import <RxLibrary/GRXWriter+Transformations.h>
+
+@interface GRPCOAuth2CredentialsInterceptor : NSObject<GRXWriterInterceptor>
++ (instancetype)interceptorWithCredentials:(id<GRPCOAuth2Credentials>)credentials;
+- (instancetype)initWithCredentials:(id<GRPCOAuth2Credentials>)credentials;
+@end
+
+@implementation GRPCOAuth2CredentialsInterceptor {
+  id<GRPCOAuth2Credentials> _credentials;
 }
-- (void)setCredentials:(GRPCOAuth2Credentials *)credentials {
-  objc_setAssociatedObject(self, &kCredentialsKey, credentials, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+
++ (instancetype)interceptorWithCredentials:(id<GRPCOAuth2Credentials>)credentials {
+  return [[self alloc] initWithCredentials:credentials];
 }
-@end
 
-@interface GIDSignIn (GRPCOAuth2)
-+ (GRPCOAuth2Credentials *)grpc_credentials;
-@end
-
-@implementation GIDSignIn (GRPCOAuth2)
-+ (GRPCOAuth2Credentials *)grpc_credentials {
-  return [[GRPCOAuth2Credentials alloc] init];
+- (instancetype)init {
+  return [self initWithCredentials:nil];
 }
-@end
 
+- (instancetype)initWithCredentials:(id<GRPCOAuth2Credentials>)credentials {
+  if (!credentials) {
+    return nil;
+  }
+  if ((self = [super init])) {
+    _credentials = credentials;
+  }
+  return self;
+}
 
-@interface MakeRPCViewController () <GRXWriterInterceptor>
-@end
-
-@implementation MakeRPCViewController
-
-- (void)interceptStartOfWriter:(ProtoRPC *)call
+- (void)interceptStartOfWriter:(GRPCCall *)call
          withCompletionHandler:(void (^)(NSError *error))completionHandler {
-  GIDGoogleUser *currentUser = GIDSignIn.sharedInstance.currentUser;
-  [currentUser.authentication getAccessTokenWithHandler:^(NSString *accessToken, NSError *error) {
-    if (!error) {
-      // Set the access token to be used.
+  [_credentials getAccessTokenWithHandler:^(NSString *accessToken, NSError *error) {
+    if (!error && !call.oauth2AccessToken) {
+      // Set the access token to be used, if one wasn't set by the user before start.
       call.oauth2AccessToken = accessToken;
     }
     completionHandler(error);
   }];
 }
+@end
+
+
+static char kCredentialsKey;
+
+@interface ProtoService (OAuth2)
+@property(nonatomic, strong) id<GRPCOAuth2Credentials> defaultCredentials;
+@end
+
+@implementation ProtoService (OAuth2)
+- (id<GRPCOAuth2Credentials>)defaultCredentials {
+  return objc_getAssociatedObject(self, &kCredentialsKey);
+}
+- (void)setDefaultCredentials:(id<GRPCOAuth2Credentials>)credentials {
+  objc_setAssociatedObject(self, &kCredentialsKey, credentials, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+@end
+
+
+
+
+@implementation MakeRPCViewController
 
 - (void)viewWillAppear:(BOOL)animated {
 
   // Create a service client and a proto request as usual.
   AUTHTestService *client = [[AUTHTestService alloc] initWithHost:kTestHostAddress];
-  client.credentials = GIDSignIn.grpc_credentials;
+  client.defaultCredentials = GIDSignIn.sharedInstance.currentUser.authentication;
 
   AUTHRequest *request = [AUTHRequest message];
   request.fillUsername = YES;
@@ -149,8 +173,10 @@ static char kCredentialsKey;
     }
   }];
 
-  // We want this to happen automatically on [call start].
-  call.beforeStarting = self;
+  id<GRPCOAuth2Credentials> credentials = GIDSignIn.sharedInstance.currentUser.authentication;
+  id<GRXWriterInterceptor> interceptor =
+      [GRPCOAuth2CredentialsInterceptor interceptorWithCredentials:credentials];
+  call = [call interceptingStartWithInterceptor:interceptor];
   [call start];
 
   self.mainLabel.text = @"Waiting for RPC to complete...";
