@@ -54,7 +54,7 @@ static NSString * const kTestHostAddress = @"grpc-test.sandbox.google.com";
 - (NSString *)UIDescription {
   if (self.code == GRPC_STATUS_UNAUTHENTICATED) {
     // Authentication error. OAuth2 specifies we'll receive a challenge header.
-    NSString *challengeHeader = self.grpc_oauth2ChallengeHeader ?: @"";
+    NSString *challengeHeader = @"dummy value"; //self.grpc_oauth2ChallengeHeader ?: @"";
     return [@"Invalid credentials. Server challenge:\n" stringByAppendingString:challengeHeader];
   } else {
     // Any other error.
