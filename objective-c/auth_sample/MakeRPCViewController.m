@@ -45,17 +45,6 @@ NSString * const kTestScope = @"https://www.googleapis.com/auth/xapi.zoo";
 
 static NSString * const kTestHostAddress = @"grpc-test.sandbox.google.com";
 
-@interface NSError (GRPCOAuth2)
-- (NSString *)grpc_oauth2ChallengeHeader;
-@end
-
-@implementation NSError (GRPCOAuth2)
-- (NSString *)grpc_oauth2ChallengeHeader {
-  // |userInfo[kGRPCStatusMetadataKey]| is the dictionary of response metadata.
-  return self.userInfo[kGRPCStatusMetadataKey][@"www-authenticate"];
-}
-@end
-
 // Category for RPC errors to create the descriptions as we want them to appear on our view.
 @interface NSError (AuthSample)
 - (NSString *)UIDescription;
@@ -76,95 +65,20 @@ static NSString * const kTestHostAddress = @"grpc-test.sandbox.google.com";
 @end
 
 
-
-// TODO(jcanizales): Simplify adapting to an auth library using this.
-
-@protocol GRPCOAuth2Credentials <NSObject>
-- (void)getAccessTokenWithHandler:(void (^)(NSString *accessToken, NSError *error))handler;
+// Tied to a specific user.
+@interface GIDAuthentication (GRPCOAuth2) <GRXOAuth2Credentials>
 @end
 
-@interface GIDAuthentication (GRPCOAuth2) <GRPCOAuth2Credentials>
+// Tied to whoever is the current user.
+@interface GIDSignIn (GRPCOAuth2) <GRXOAuth2Credentials>
 @end
 
-
-
-#import <RxLibrary/GRXBufferedPipe.h>
-
-@interface GRXWriterWithBlock : GRXBufferedPipe
-- (instancetype)initWithBlock:(void (^)(id<GRXWriteable> writeable))writerBlock;
-@end
-
-@implementation GRXWriterWithBlock {
-  void (^_writeOnWriteable)(id<GRXWriteable> writeable);
-}
-
-- (instancetype)initWithBlock:(void (^)(id<GRXWriteable>))writerBlock {
-  if (!writerBlock) {
-    return nil;
-  }
-  if ((self = [super init])) {
-    _writeOnWriteable = writerBlock;
-  }
-  return self;
-}
-
-- (void)startWithWriteable:(id<GRXWriteable>)writeable {
-  [super startWithWriteable:writeable];
-  _writeOnWriteable(self);
-}
-
-@end
-
-
-@interface GRXWriter (Blocks)
-+ (GRXWriter *)writerWithBlock:(void (^)(id<GRXWriteable> writeable))writerBlock;
-@end
-
-@implementation GRXWriter (Blocks)
-+ (GRXWriter *)writerWithBlock:(void (^)(id<GRXWriteable> writeable))writerBlock {
-  return [[GRXWriterWithBlock alloc] initWithBlock:writerBlock];
+@implementation GIDSignIn (GRPCOAuth2)
+- (void)getAccessTokenWithHandler:(void (^)(NSString *, NSError *))handler {
+  return [self.currentUser.authentication getAccessTokenWithHandler:handler];
 }
 @end
 
-@interface GIDGoogleUser (GRX)
-- (GRXWriter *)grx_accessTokenWriter;
-@end
-
-@implementation GIDGoogleUser (GRX)
-
-- (GRXWriter *)grx_accessTokenWriter {
-  return [GRXWriter writerWithBlock:^(id<GRXWriteable> writeable) {
-    // TODO(jcanizales): Extract as writerWithTarget:self
-    //                           singleValueSelector:@selector(getAccessTokenWithHandler)?
-    [self.authentication getAccessTokenWithHandler:^(NSString *accessToken, NSError *error) {
-      if (accessToken) {
-        [writeable writeValue:accessToken];
-      }
-      [writeable writesFinishedWithError:error];
-    }];
-  }];
-}
-
-@end
-
-
-static char kCredentialsKey;
-
-@interface ProtoService (OAuth2)
-@property(nonatomic, strong) id<GRPCOAuth2Credentials> defaultCredentials;
-@end
-
-@implementation ProtoService (OAuth2)
-- (id<GRPCOAuth2Credentials>)defaultCredentials {
-  return objc_getAssociatedObject(self, &kCredentialsKey);
-}
-- (void)setDefaultCredentials:(id<GRPCOAuth2Credentials>)credentials {
-  objc_setAssociatedObject(self, &kCredentialsKey, credentials, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-}
-@end
-
-
-#import <RxLibrary/GRXWriter+Transformations.h>
 
 @implementation MakeRPCViewController
 
@@ -174,6 +88,7 @@ static char kCredentialsKey;
   AUTHTestService *client = [[AUTHTestService alloc] initWithHost:kTestHostAddress];
   // TODO(jcanizales): This. After it, a category method that lets me say "use GIDSignIn" and that's it.
   //client.defaultCredentials = GIDSignIn.sharedInstance.currentUser.authentication;
+  //client.defaultHeaders
 
   AUTHRequest *request = [AUTHRequest message];
   request.fillUsername = YES;
@@ -192,11 +107,7 @@ static char kCredentialsKey;
     }
   }];
 
-  // TODO(jcanizales): Move to GRPCCall+OAuth2
-  call.requestMetadata[@"authorization"] =
-      [GIDSignIn.sharedInstance.currentUser.grx_accessTokenWriter map:^id(NSString *token) {
-        return [@"Bearer " stringByAppendingString:token];
-      }];
+  call.oauth2Credentials = GIDSignIn.sharedInstance.currentUser.authentication;
   [call start];
 
   self.mainLabel.text = @"Waiting for RPC to complete...";
