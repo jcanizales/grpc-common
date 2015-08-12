@@ -33,12 +33,13 @@
 
 #import "MakeRPCViewController.h"
 
+#include <grpc/status.h>
+#include <objc/runtime.h>
+
 #import <AuthTestService/AuthSample.pbrpc.h>
 #import <Google/SignIn.h>
-#include <grpc/status.h>
 #import <GRPCClient/GRPCCall.h>
 #import <GRPCClient/GRPCCall+OAuth2.h>
-#import <objc/runtime.h>
 #import <ProtoRPC/ProtoRPC.h>
 
 NSString * const kTestScope = @"https://www.googleapis.com/auth/xapi.zoo";
